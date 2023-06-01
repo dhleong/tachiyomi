@@ -241,6 +241,9 @@ dependencies {
     // Shizuku
     implementation(libs.bundles.shizuku)
 
+    // ML Tools
+    implementation(libs.bundles.mlkit.text)
+
     // Tests
     testImplementation(libs.bundles.test)
 
