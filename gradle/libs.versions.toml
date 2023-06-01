@@ -8,6 +8,8 @@ sqldelight = "1.5.5"
 leakcanary = "2.11"
 voyager = "1.0.0-rc06"
 richtext = "0.16.0"
+mlkit-text_version = "19.0.0"
+mlkit-text-models = "16.0.0"
 
 [libraries]
 desugar = "com.android.tools:desugar_jdk_libs:2.0.3"
@@ -90,6 +92,9 @@ voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", vers
 
 kotlinter = "org.jmailen.gradle:kotlinter-gradle:3.13.0"
 
+mlkit-text = { module = "com.google.android.gms:play-services-mlkit-text-recognition", version.ref = "mlkit-text_version" }
+mlkit-text-japanese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-japanese", version.ref = "mlkit-text-models" }
+
 [bundles]
 reactivex = ["rxandroid", "rxjava"]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-dnsoverhttps"]
@@ -99,4 +104,5 @@ coil = ["coil-core", "coil-gif", "coil-compose"]
 shizuku = ["shizuku-api", "shizuku-provider"]
 voyager = ["voyager-navigator", "voyager-tab-navigator", "voyager-transitions"]
 richtext = ["richtext-commonmark", "richtext-m3"]
+mlkit-text = ["mlkit-text", "mlkit-text-japanese"]
 test = ["junit", "kotest-assertions", "mockk"]

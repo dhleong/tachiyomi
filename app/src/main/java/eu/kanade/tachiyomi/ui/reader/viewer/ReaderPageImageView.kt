@@ -1,12 +1,14 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -28,12 +30,25 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_IN_OUT
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_OUT_QUAD
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
 import com.github.chrisbanes.photoview.PhotoView
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text.TextBlock
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
+import eu.kanade.tachiyomi.util.lang.await
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.view.isVisibleOnScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * A wrapper view for showing page image.
@@ -64,6 +79,100 @@ open class ReaderPageImageView @JvmOverloads constructor(
      * For automatic background. Will be set as background color when [onImageLoaded] is called.
      */
     var pageBackground: Drawable? = null
+
+    private val recognizer by lazy {
+        TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+    }
+    private val lastBlocks = AtomicReference<List<TextBlock>>(null)
+
+    private fun onImageDrawableLoaded(drawable: Drawable) {
+        Log.v("ml", "onImageDrawableLoaded($drawable)")
+        if (drawable !is BitmapDrawable) {
+            return
+        }
+
+        scanForText {
+            InputImage.fromBitmap(drawable.bitmap, 0)
+        }
+    }
+
+    private fun onTiledImageLoaded(stream: InputStream) {
+        scanForText {
+            Log.v("ml", "scan stream...")
+            stream.reset()
+            InputImage.fromBitmap(
+                BitmapFactory.decodeStream(stream),
+                0,
+            )
+        }
+    }
+
+    private fun scanForText(inputFactory: () -> InputImage) {
+        val job = scopeJob ?: return
+        job.cancelChildren()
+
+        Log.v("ml", "launch...")
+        scope?.launch(job) {
+            Log.v("ml", "processing...")
+            try {
+                val text = recognizer.process(inputFactory()).await()
+                Log.v("ml", "processed: ${text.text}")
+                for (block in text.textBlocks) {
+                    Log.v("ml", " - block (${block.boundingBox}): ${block.text}")
+                }
+                lastBlocks.set(text.textBlocks)
+            } catch (e: Throwable) {
+                Log.v("ml", "failed: $e")
+            }
+        }
+    }
+
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            lastBlocks.get()?.let { blocks ->
+                val sourceCoord =
+                    (pageView as? SubsamplingScaleImageView)
+                        ?.viewToSourceCoord(event.x, event.y)
+                Log.v("ml", "source coord=$sourceCoord")
+                if (sourceCoord != null) {
+                    val matchingBlock = blocks.find {
+                        it.boundingBox?.contains(
+                            sourceCoord.x.toInt(),
+                            sourceCoord.y.toInt(),
+                        ) == true
+                    }
+
+                    Log.v("ml", "found: ${matchingBlock?.text}")
+                    for (line in matchingBlock?.lines ?: emptyList()) {
+                        Log.v("ml", "line@${line.confidence}: ${line.text}")
+                    }
+                    return matchingBlock != null
+                }
+            }
+        }
+        return super.onInterceptTouchEvent(event)
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        super.onTouchEvent(event)
+        return true
+    }
+
+    private var scopeJob: Job? = null
+    private var scope: CoroutineScope? = null
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        val newJob = SupervisorJob()
+        scopeJob = newJob
+        scope = CoroutineScope(newJob + Dispatchers.Main)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        scope?.cancel()
+        scope = null
+    }
 
     @CallSuper
     open fun onImageLoaded() {
@@ -140,6 +249,7 @@ open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     fun setImage(inputStream: InputStream, isAnimated: Boolean, config: Config) {
+        Log.v("ml", "setImage: $inputStream")
         this.config = config
         if (isAnimated) {
             prepareAnimatedImageView()
@@ -267,6 +377,9 @@ open class ReaderPageImageView @JvmOverloads constructor(
                 override fun onReady() {
                     setupZoom(config)
                     if (isVisibleOnScreen()) landscapeZoom(true)
+                    if (image is InputStream) {
+                        onTiledImageLoaded(image)
+                    }
                     this@ReaderPageImageView.onImageLoaded()
                 }
 
@@ -279,9 +392,13 @@ open class ReaderPageImageView @JvmOverloads constructor(
         when (image) {
             is Drawable -> {
                 val bitmap = (image as BitmapDrawable).bitmap
+                onImageDrawableLoaded(image)
                 setImage(ImageSource.bitmap(bitmap))
             }
-            is InputStream -> setImage(ImageSource.inputStream(image))
+            is InputStream -> {
+                Log.v("ml", "load from input stream: $image")
+                setImage(ImageSource.inputStream(image))
+            }
             else -> throw IllegalArgumentException("Not implemented for class ${image::class.simpleName}")
         }
         isVisible = true
