@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.ProgressDialog
 import android.app.assist.AssistContent
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -29,6 +30,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
 import androidx.core.transition.doOnEnd
@@ -42,6 +44,7 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.internal.ToolbarUtils
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.transition.platform.MaterialContainerTransform
+import com.google.mlkit.vision.text.Text.TextBlock
 import dev.chrisbanes.insetter.applyInsetter
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.manga.model.orientationType
@@ -792,6 +795,24 @@ class ReaderActivity : BaseActivity() {
      */
     fun onPageLongTap(page: ReaderPage) {
         ReaderPageSheet(this, page).show()
+    }
+
+    fun onDetectedTextTap(textBlock: TextBlock) {
+        shareText(textBlock.text)
+    }
+
+    private fun shareText(text: String) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            putExtra(Intent.EXTRA_TEXT, text)
+            clipData = ClipData.newPlainText("", text)
+            type = "text/plain"
+        }
+
+        val intent = Intent.createChooser(shareIntent, getString(R.string.action_share)).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        startActivity(intent)
     }
 
     /**

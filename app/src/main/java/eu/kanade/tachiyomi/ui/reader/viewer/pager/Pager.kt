@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.content.Context
-import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.core.view.children
 import androidx.viewpager.widget.DirectionalViewPager
+import com.google.mlkit.vision.text.Text.TextBlock
 import eu.kanade.tachiyomi.ui.reader.viewer.GestureDetectorWithLongTap
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 
@@ -31,6 +31,11 @@ open class Pager(
     var longTapListener: ((MotionEvent) -> Boolean)? = null
 
     /**
+     * Tap listener function to execute when a tap on ML-recognized text is detected.
+     */
+    var detectedTextTapListener: ((TextBlock) -> Unit)? = null
+
+    /**
      * Gesture listener that implements tap and long tap events.
      */
     private val gestureListener = object : GestureDetectorWithLongTap.Listener() {
@@ -40,9 +45,9 @@ open class Pager(
                 val selectedView = children.find { adapter.getItemPosition(it) == currentItem }
                 (selectedView as? ReaderPageImageView)?.let { view ->
                     val text = view.textDetector?.findTextBlockInView(ev)
-                    if (text != null) {
-                        // TODO notify
-                        Log.v("ml", "Tapped on ${text.text}")
+                    val listener = detectedTextTapListener
+                    if (text != null && listener != null) {
+                        listener(text)
                         return true
                     }
                 }
