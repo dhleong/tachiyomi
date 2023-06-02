@@ -128,6 +128,9 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             }
             false
         }
+        pager.detectedTextTapListener = { item ->
+            activity.onDetectedTextTap(item)
+        }
 
         config.dualPageSplitChangedListener = { enabled ->
             if (!enabled) {

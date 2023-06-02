@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.reader
 
 import android.annotation.SuppressLint
 import android.app.assist.AssistContent
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -28,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
 import androidx.core.transition.doOnEnd
@@ -38,6 +40,7 @@ import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.elevation.SurfaceColors
 import com.google.android.material.transition.platform.MaterialContainerTransform
+import com.google.mlkit.vision.text.Text.TextBlock
 import dev.chrisbanes.insetter.applyInsetter
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.reader.DisplayRefreshHost
@@ -644,6 +647,24 @@ class ReaderActivity : BaseActivity() {
      */
     fun onPageLongTap(page: ReaderPage) {
         viewModel.openPageDialog(page)
+    }
+
+    fun onDetectedTextTap(textBlock: TextBlock) {
+        shareText(textBlock.text)
+    }
+
+    private fun shareText(text: String) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            putExtra(Intent.EXTRA_TEXT, text)
+            clipData = ClipData.newPlainText("", text)
+            type = "text/plain"
+        }
+
+        val intent = Intent.createChooser(shareIntent, getString(R.string.action_share)).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        startActivity(intent)
     }
 
     /**
