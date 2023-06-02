@@ -1,11 +1,14 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.content.Context
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.MotionEvent
+import androidx.core.view.children
 import androidx.viewpager.widget.DirectionalViewPager
 import eu.kanade.tachiyomi.ui.reader.viewer.GestureDetectorWithLongTap
+import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 
 /**
  * Pager implementation that listens for tap and long tap and allows temporarily disabling touch
@@ -32,6 +35,19 @@ open class Pager(
      */
     private val gestureListener = object : GestureDetectorWithLongTap.Listener() {
         override fun onSingleTapConfirmed(ev: MotionEvent): Boolean {
+            val adapter = adapter
+            if (adapter != null) {
+                val selectedView = children.find { adapter.getItemPosition(it) == currentItem }
+                (selectedView as? ReaderPageImageView)?.let { view ->
+                    val text = view.textDetector?.findTextBlockInView(ev)
+                    if (text != null) {
+                        // TODO notify
+                        Log.v("ml", "Tapped on ${text.text}")
+                        return true
+                    }
+                }
+            }
+
             tapListener?.invoke(ev)
             return true
         }
