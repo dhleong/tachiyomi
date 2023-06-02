@@ -31,24 +31,13 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_OUT_QU
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
 import com.github.chrisbanes.photoview.PhotoView
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.Text.TextBlock
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
-import eu.kanade.tachiyomi.util.lang.await
+import eu.kanade.tachiyomi.util.ml.TextDetector
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.view.isVisibleOnScreen
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.nio.ByteBuffer
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * A wrapper view for showing page image.
@@ -80,20 +69,19 @@ open class ReaderPageImageView @JvmOverloads constructor(
      */
     var pageBackground: Drawable? = null
 
-    private val recognizer by lazy {
-        TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+    val textDetector: TextDetector? by lazy {
+        pageView?.let { TextDetector(it) }
     }
-    private val lastBlocks = AtomicReference<List<TextBlock>>(null)
 
     private fun onImageDrawableLoaded(drawable: BitmapDrawable) {
         Log.v("ml", "onImageDrawableLoaded($drawable)")
-        scanForText {
+        textDetector?.scanForText {
             InputImage.fromBitmap(drawable.bitmap, 0)
         }
     }
 
     private fun onTiledImageLoaded(stream: InputStream) {
-        scanForText {
+        textDetector?.scanForText {
             Log.v("ml", "scan stream...")
             stream.reset()
             InputImage.fromBitmap(
@@ -101,73 +89,6 @@ open class ReaderPageImageView @JvmOverloads constructor(
                 0,
             )
         }
-    }
-
-    private fun scanForText(inputFactory: () -> InputImage) {
-        val job = scopeJob ?: return
-        job.cancelChildren()
-
-        Log.v("ml", "launch...")
-        scope?.launch(job) {
-            Log.v("ml", "processing...")
-            try {
-                val text = recognizer.process(inputFactory()).await()
-                Log.v("ml", "processed: ${text.text}")
-                for (block in text.textBlocks) {
-                    Log.v("ml", " - block (${block.boundingBox}): ${block.text}")
-                }
-                lastBlocks.set(text.textBlocks)
-            } catch (e: Throwable) {
-                Log.v("ml", "failed: $e")
-            }
-        }
-    }
-
-    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-            lastBlocks.get()?.let { blocks ->
-                val sourceCoord =
-                    (pageView as? SubsamplingScaleImageView)
-                        ?.viewToSourceCoord(event.x, event.y)
-                Log.v("ml", "source coord=$sourceCoord")
-                if (sourceCoord != null) {
-                    val matchingBlock = blocks.find {
-                        it.boundingBox?.contains(
-                            sourceCoord.x.toInt(),
-                            sourceCoord.y.toInt(),
-                        ) == true
-                    }
-
-                    Log.v("ml", "found: ${matchingBlock?.text}")
-                    for (line in matchingBlock?.lines ?: emptyList()) {
-                        Log.v("ml", "line@${line.confidence}: ${line.text}")
-                    }
-                    return matchingBlock != null
-                }
-            }
-        }
-        return super.onInterceptTouchEvent(event)
-    }
-
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        super.onTouchEvent(event)
-        return true
-    }
-
-    private var scopeJob: Job? = null
-    private var scope: CoroutineScope? = null
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        val newJob = SupervisorJob()
-        scopeJob = newJob
-        scope = CoroutineScope(newJob + Dispatchers.Main)
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        scope?.cancel()
-        scope = null
     }
 
     @CallSuper
