@@ -20,7 +20,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
-import eu.kanade.tachiyomi.util.ml.TextDetector
+import eu.kanade.tachiyomi.util.ml.TextRecognizer
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import tachiyomi.core.util.system.logcat
@@ -37,9 +37,9 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
 
     private val scope = MainScope()
 
-    private val textDetector: TextDetector? by lazy {
+    private val textRecognizer: TextRecognizer? by lazy {
         // TODO inject this, probably, and support disabling it
-        TextDetector(scope)
+        TextRecognizer(scope)
     }
 
     /**
@@ -109,9 +109,8 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             },
         )
         pager.tapListener = f@{ event ->
-            textDetector?.findTextBlockAtPoint(event)?.let { text ->
-                Log.v("ml", "Tapped on: $text")
-                activity.onDetectedTextTap(text)
+            textRecognizer?.findTextBlockAtPoint(event)?.let { text ->
+                activity.onRecognizedTextTap(text)
                 return@f
             }
 
@@ -452,6 +451,6 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     }
 
     fun onVisibleAreaChanged() {
-        textDetector?.scanViewForText(pager)
+        textRecognizer?.scanViewForText(pager)
     }
 }

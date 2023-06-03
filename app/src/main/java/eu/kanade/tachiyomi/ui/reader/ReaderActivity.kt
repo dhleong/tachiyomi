@@ -68,7 +68,7 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReadingModeType
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.R2LPagerViewer
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
-import eu.kanade.tachiyomi.util.ml.DetectedText
+import eu.kanade.tachiyomi.util.ml.RecognizedText
 import eu.kanade.tachiyomi.util.preference.toggle
 import eu.kanade.tachiyomi.util.system.applySystemAnimatorScale
 import eu.kanade.tachiyomi.util.system.createReaderThemeContext
@@ -796,7 +796,7 @@ class ReaderActivity : BaseActivity() {
         ReaderPageSheet(this, page).show()
     }
 
-    fun onDetectedTextTap(item: DetectedText) {
+    fun onRecognizedTextTap(item: RecognizedText) {
         shareText(item.text)
     }
 
