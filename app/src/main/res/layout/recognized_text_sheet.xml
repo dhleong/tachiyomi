@@ -11,11 +11,30 @@
         android:id="@+id/recognized_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
         android:textColor="?attr/colorOnBackground"
         android:textSize="22sp"
         android:textAlignment="center"
         tools:text="recognized"
+        />
+
+    <TextView
+        android:id="@+id/translated_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp"
+        android:textColor="?attr/colorOnBackground"
+        android:textSize="16sp"
+        android:textAlignment="center"
+        android:text="..."
+        tools:ignore="HardcodedText" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
         />
 
     <TextView

@@ -98,6 +98,8 @@ mlkit-text-devanagari = { module = "com.google.android.gms:play-services-mlkit-t
 mlkit-text-japanese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-japanese", version.ref = "mlkit-text-models" }
 mlkit-text-korean = { module = "com.google.android.gms:play-services-mlkit-text-recognition-korean", version.ref = "mlkit-text-models" }
 
+mlkit-translate = "com.google.mlkit:translate:17.0.1"
+
 [bundles]
 reactivex = ["rxandroid", "rxjava"]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-dnsoverhttps"]
