@@ -19,8 +19,12 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import tachiyomi.core.util.system.logcat
 import uy.kohesive.injekt.injectLazy
 import kotlin.math.min
@@ -439,5 +443,18 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
 
     private fun cleanupPageSplit() {
         adapter.cleanupPageSplit()
+    }
+
+    private var textDetectorJob: Job? = null
+
+    fun onVisibleAreaChanged() {
+        textDetectorJob?.cancel()
+        val newJob = SupervisorJob()
+        textDetectorJob = newJob
+        scope.launch(newJob) {
+            delay(175)
+
+            pager.textDetector.scanViewForText(pager)
+        }
     }
 }

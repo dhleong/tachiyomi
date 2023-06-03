@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Animatable
@@ -30,7 +29,6 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_IN_OUT
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_OUT_QUAD
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
 import com.github.chrisbanes.photoview.PhotoView
-import com.google.mlkit.vision.common.InputImage
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import eu.kanade.tachiyomi.util.ml.TextDetector
 import eu.kanade.tachiyomi.util.system.GLUtil
@@ -79,20 +77,20 @@ open class ReaderPageImageView @JvmOverloads constructor(
             return
         }
 
-        textDetector?.scanForText {
-            InputImage.fromBitmap(drawable.bitmap, 0)
-        }
+//        textDetector?.scanForText {
+//            InputImage.fromBitmap(drawable.bitmap, 0)
+//        }
     }
 
     private fun onTiledImageLoaded(stream: InputStream) {
-        textDetector?.scanForText {
-            Log.v("ml", "scan stream...")
-            stream.reset()
-            InputImage.fromBitmap(
-                BitmapFactory.decodeStream(stream),
-                0,
-            )
-        }
+//        textDetector?.scanForText {
+//            Log.v("ml", "scan stream...")
+//            stream.reset()
+//            InputImage.fromBitmap(
+//                BitmapFactory.decodeStream(stream),
+//                0,
+//            )
+//        }
     }
 
     @CallSuper
@@ -109,6 +107,11 @@ open class ReaderPageImageView @JvmOverloads constructor(
     @CallSuper
     open fun onScaleChanged(newScale: Float) {
         onScaleChanged?.invoke(newScale)
+    }
+
+    @CallSuper
+    open fun onCenterChanged(newCenter: PointF?) {
+        // No-op for now
     }
 
     @CallSuper
@@ -263,7 +266,7 @@ open class ReaderPageImageView @JvmOverloads constructor(
                     }
 
                     override fun onCenterChanged(newCenter: PointF?, origin: Int) {
-                        // Not used
+                        this@ReaderPageImageView.onCenterChanged(newCenter)
                     }
                 },
             )
