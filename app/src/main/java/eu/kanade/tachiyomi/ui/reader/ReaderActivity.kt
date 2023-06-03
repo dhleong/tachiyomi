@@ -55,6 +55,7 @@ import eu.kanade.tachiyomi.databinding.ReaderActivityBinding
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.ml.RecognizedTextSheet
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.AddToLibraryFirst
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.Error
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.Success
@@ -797,10 +798,11 @@ class ReaderActivity : BaseActivity() {
     }
 
     fun onRecognizedTextTap(item: RecognizedText) {
-        shareText(item.text)
+        RecognizedTextSheet(this, item).show()
     }
 
-    private fun shareText(text: String) {
+    /** Called from the RecognizedTextSheet */
+    fun shareText(text: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             putExtra(Intent.EXTRA_TEXT, text)
             clipData = ClipData.newPlainText("", text)
