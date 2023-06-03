@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.graphics.PointF
+import android.util.Log
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -115,6 +116,7 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         )
         pager.tapListener = f@{ event ->
             textDetector?.findTextBlockAtPoint(event)?.let { text ->
+                Log.v("ml", "Tapped on: $text")
                 activity.onDetectedTextTap(text)
                 return@f
             }

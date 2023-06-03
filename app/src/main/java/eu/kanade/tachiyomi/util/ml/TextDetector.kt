@@ -6,7 +6,7 @@ import android.view.View
 import androidx.core.view.drawToBitmap
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.Text.TextBlock
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizerOptionsInterface
 import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
@@ -25,11 +25,13 @@ class TextDetector(
     parentScope: CoroutineScope,
     language: TextRecognizerOptionsInterface =
         JapaneseTextRecognizerOptions.Builder().build(),
+    private val preferredTextGranularity: DetectedText.Granularity =
+        DetectedText.Granularity.WORD,
 ) {
     private val recognizer by lazy {
         TextRecognition.getClient(language)
     }
-    private val lastBlocks = AtomicReference<List<TextBlock>>(null)
+    private val lastBlocks = AtomicReference<List<Text.TextBlock>>(null)
 
     private val scope = CoroutineScope(
         parentScope.newCoroutineContext(Dispatchers.IO),
@@ -93,13 +95,68 @@ class TextDetector(
             }
         }
 
-        val totalConfidence = matchingBlock.lines.sumOf { it.confidence.toDouble() }
-        val averageConfidence = totalConfidence / matchingBlock.lines.size
+        // Refine granularity if requested. This is a bit more
+        // annoying than it could be if TextBase were not package private
+        if (preferredTextGranularity != DetectedText.Granularity.BLOCK) {
+            matchingBlock.findLineAt(x, y)?.let { lineGranularity ->
+                // NOTE: The Japanese recognizer tends to (incorrectly) return a single
+                // "element" for every line. If there's a single "word" in the line, we should
+                // fall through and return a "line" granularity result
+                if (
+                    preferredTextGranularity == DetectedText.Granularity.WORD &&
+                        lineGranularity.elements.size > 1
+                ) {
+                    lineGranularity.findElementAt(x, y)?.let { wordGranularity ->
+                        return DetectedText(
+                            text = wordGranularity.text,
+                            language = wordGranularity.recognizedLanguage,
+                            confidence = wordGranularity.confidence,
+                            granularity = DetectedText.Granularity.WORD,
+                        )
+                    }
+
+                    Log.v("ml", "Fallback to LINE from $preferredTextGranularity")
+                }
+
+                return DetectedText(
+                    text = lineGranularity.text,
+                    language = lineGranularity.recognizedLanguage,
+                    confidence = lineGranularity.elements.averageBy { it.confidence },
+                    granularity = DetectedText.Granularity.LINE,
+                )
+            }
+
+            Log.v("ml", "Fallback to BLOCK from $preferredTextGranularity")
+        }
 
         return DetectedText(
             text = matchingBlock.text,
             language = matchingBlock.recognizedLanguage,
-            confidence = averageConfidence.toFloat(),
+            confidence = matchingBlock.lines.averageBy { it.confidence },
+            granularity = DetectedText.Granularity.BLOCK,
         )
     }
+}
+
+private fun Text.TextBlock.findLineAt(x: Int, y: Int): Text.Line? {
+    for (line in lines) {
+        if (line.boundingBox?.contains(x, y) == true) {
+            return line
+        }
+    }
+    return null
+}
+
+private fun Text.Line.findElementAt(x: Int, y: Int): Text.Element? {
+    for (element in elements) {
+        if (element.boundingBox?.contains(x, y) == true) {
+            return element
+        }
+    }
+    return null
+}
+
+private fun <T> List<T>.averageBy(predicate: (T) -> Float): Float {
+    val total = sumOf { predicate(it).toDouble() }
+    return (total / size).toFloat()
 }
