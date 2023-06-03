@@ -243,6 +243,7 @@ dependencies {
 
     // ML Tools
     implementation(libs.bundles.mlkit.text)
+    implementation(libs.mlkit.translate)
 
     // Tests
     testImplementation(libs.bundles.test)
