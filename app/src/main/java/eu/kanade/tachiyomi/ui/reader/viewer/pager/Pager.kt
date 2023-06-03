@@ -5,9 +5,7 @@ import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.viewpager.widget.DirectionalViewPager
-import com.google.mlkit.vision.text.Text.TextBlock
 import eu.kanade.tachiyomi.ui.reader.viewer.GestureDetectorWithLongTap
-import eu.kanade.tachiyomi.util.ml.TextDetector
 
 /**
  * Pager implementation that listens for tap and long tap and allows temporarily disabling touch
@@ -30,40 +28,10 @@ open class Pager(
     var longTapListener: ((MotionEvent) -> Boolean)? = null
 
     /**
-     * Tap listener function to execute when a tap on ML-recognized text is detected.
-     */
-    var detectedTextTapListener: ((TextBlock) -> Unit)? = null
-
-    val textDetector by lazy {
-        TextDetector(this)
-    }
-
-    /**
      * Gesture listener that implements tap and long tap events.
      */
     private val gestureListener = object : GestureDetectorWithLongTap.Listener() {
         override fun onSingleTapConfirmed(ev: MotionEvent): Boolean {
-//            val adapter = adapter
-//            if (adapter != null) {
-//                val selectedView = children.find { adapter.getItemPosition(it) == currentItem }
-//                (selectedView as? ReaderPageImageView)?.let { view ->
-//                    val text = view.textDetector?.findTextBlockInView(ev)
-//                    val listener = detectedTextTapListener
-//                    if (text != null && listener != null) {
-//                        listener(text)
-//                        return true
-//                    }
-//                }
-//            }
-
-            val listener = detectedTextTapListener
-            if (listener != null) {
-                textDetector.findTextBlockAtPoint(ev.x.toInt(), ev.y.toInt())?.let { text ->
-                    listener(text)
-                    return true
-                }
-            }
-
             tapListener?.invoke(ev)
             return true
         }
