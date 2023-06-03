@@ -48,6 +48,9 @@ class PagerConfig(
     var landscapeZoom = false
         private set
 
+    var recognizeTextLanguage = ReaderPreferences.RecognizeTextLanguage.DISABLE
+        private set
+
     init {
         readerPreferences.readerTheme()
             .register(
@@ -106,6 +109,9 @@ class PagerConfig(
                 { dualPageRotateToFitInvert = it },
                 { imagePropertyChangedListener?.invoke() },
             )
+
+        readerPreferences.recognizeTextLanguage()
+            .register({ recognizeTextLanguage = it })
     }
 
     private fun zoomTypeFromPreference(value: Int) {

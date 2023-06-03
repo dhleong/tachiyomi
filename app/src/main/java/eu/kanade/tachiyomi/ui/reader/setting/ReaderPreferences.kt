@@ -64,6 +64,8 @@ class ReaderPreferences(
 
     fun skipDupe() = preferenceStore.getBoolean("skip_dupe", false)
 
+    fun recognizeTextLanguage() = preferenceStore.getEnum("recognize_text", RecognizeTextLanguage.DISABLE)
+
     // endregion
 
     // region Split two page spread
@@ -134,5 +136,14 @@ class ReaderPreferences(
         HIGH(13),
         LOW(31),
         LOWEST(47),
+    }
+
+    enum class RecognizeTextLanguage {
+        DISABLE,
+        LATIN,
+        DEVANAGARI,
+        CHINESE,
+        JAPANESE,
+        KOREAN,
     }
 }

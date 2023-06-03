@@ -8,9 +8,13 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.TextRecognizerOptionsInterface
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
+import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions
 import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.lang.await
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -27,14 +31,25 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class TextRecognizer(
     parentScope: CoroutineScope,
-    language: TextRecognizerOptionsInterface =
-        JapaneseTextRecognizerOptions.Builder().build(),
+    language: ReaderPreferences.RecognizeTextLanguage,
     private val preferredTextGranularity: RecognizedText.Granularity =
         RecognizedText.Granularity.WORD,
     private val debounceScansDuration: Duration = 175.0.milliseconds,
 ) {
     private val recognizer by lazy {
-        TextRecognition.getClient(language)
+        when (language) {
+            ReaderPreferences.RecognizeTextLanguage.DISABLE -> null
+            ReaderPreferences.RecognizeTextLanguage.LATIN ->
+                TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+            ReaderPreferences.RecognizeTextLanguage.DEVANAGARI ->
+                TextRecognition.getClient(DevanagariTextRecognizerOptions.Builder().build())
+            ReaderPreferences.RecognizeTextLanguage.CHINESE ->
+                TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
+            ReaderPreferences.RecognizeTextLanguage.KOREAN ->
+                TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
+            ReaderPreferences.RecognizeTextLanguage.JAPANESE ->
+                TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+        }
     }
     private val lastBlocks = AtomicReference<List<Text.TextBlock>>(null)
 
@@ -45,7 +60,7 @@ class TextRecognizer(
 
     init {
         scope.coroutineContext.job.invokeOnCompletion {
-            recognizer.closeQuietly()
+            recognizer?.closeQuietly()
         }
     }
 
@@ -56,6 +71,8 @@ class TextRecognizer(
     }
 
     fun scanForText(inputFactory: () -> InputImage) {
+        val recognizer = recognizer ?: return
+
         // There should only be one active scan at a time
         lastScanJob?.cancel()
         lastScanJob = scope.launch {

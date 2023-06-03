@@ -93,7 +93,10 @@ voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", vers
 kotlinter = "org.jmailen.gradle:kotlinter-gradle:3.13.0"
 
 mlkit-text = { module = "com.google.android.gms:play-services-mlkit-text-recognition", version.ref = "mlkit-text_version" }
+mlkit-text-chinese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-chinese", version.ref = "mlkit-text-models" }
+mlkit-text-devanagari = { module = "com.google.android.gms:play-services-mlkit-text-recognition-devanagari", version.ref = "mlkit-text-models" }
 mlkit-text-japanese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-japanese", version.ref = "mlkit-text-models" }
+mlkit-text-korean = { module = "com.google.android.gms:play-services-mlkit-text-recognition-korean", version.ref = "mlkit-text-models" }
 
 [bundles]
 reactivex = ["rxandroid", "rxjava"]
@@ -104,5 +107,5 @@ coil = ["coil-core", "coil-gif", "coil-compose"]
 shizuku = ["shizuku-api", "shizuku-provider"]
 voyager = ["voyager-navigator", "voyager-tab-navigator", "voyager-transitions"]
 richtext = ["richtext-commonmark", "richtext-m3"]
-mlkit-text = ["mlkit-text", "mlkit-text-japanese"]
+mlkit-text = ["mlkit-text", "mlkit-text-chinese", "mlkit-text-devanagari", "mlkit-text-japanese", "mlkit-text-korean"]
 test = ["junit", "kotest-assertions", "mockk"]

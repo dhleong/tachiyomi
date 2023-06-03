@@ -433,6 +433,15 @@
     <string name="pref_always_show_chapter_transition">Always show chapter transition</string>
     <string name="pref_category_reading_mode">Reading mode</string>
     <string name="pref_category_reading">Reading</string>
+    <string name="pref_category_translation">Translation</string>
+    <string name="pref_recognize_text_language">Support tapping on image text</string>
+    <string name="pref_recognize_text_language_description">%s\n\nUses offline machine learning. No data leaves your device.</string>
+    <string name="pref_recognize_text_language_disable">(Disabled)</string>
+    <string name="pref_recognize_text_language_lat">Latin-text Languages</string>
+    <string name="pref_recognize_text_language_dev">Devanagari-text Languages</string>
+    <string name="pref_recognize_text_language_ch">Chinese</string>
+    <string name="pref_recognize_text_language_jp">Japanese</string>
+    <string name="pref_recognize_text_language_ko">Korean</string>
     <string name="pref_webtoon_side_padding">Side padding</string>
     <string name="webtoon_side_padding_0">None</string>
     <string name="webtoon_side_padding_5">5%</string>

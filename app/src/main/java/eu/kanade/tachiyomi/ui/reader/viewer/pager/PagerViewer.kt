@@ -36,9 +36,8 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
 
     private val scope = MainScope()
 
-    private val textRecognizer: TextRecognizer? by lazy {
-        // TODO inject this, probably, and support disabling it
-        TextRecognizer(scope)
+    private val textRecognizer: TextRecognizer by lazy {
+        TextRecognizer(scope, config.recognizeTextLanguage)
     }
 
     /**
@@ -108,7 +107,7 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             },
         )
         pager.tapListener = f@{ event ->
-            textRecognizer?.findTextBlockAtPoint(event)?.let { text ->
+            textRecognizer.findTextBlockAtPoint(event)?.let { text ->
                 activity.onRecognizedTextTap(text)
                 return@f
             }
@@ -450,6 +449,6 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     }
 
     fun onVisibleAreaChanged() {
-        textRecognizer?.scanViewForText(pager)
+        textRecognizer.scanViewForText(pager)
     }
 }
