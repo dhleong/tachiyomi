@@ -21,13 +21,8 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
 import eu.kanade.tachiyomi.util.ml.TextDetector
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import tachiyomi.core.util.system.logcat
 import uy.kohesive.injekt.injectLazy
 import kotlin.math.min
@@ -42,7 +37,6 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
 
     private val scope = MainScope()
 
-    private var textDetectorDebounceJob: Job = SupervisorJob()
     private val textDetector: TextDetector? by lazy {
         // TODO inject this, probably, and support disabling it
         TextDetector(scope)
@@ -458,14 +452,6 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     }
 
     fun onVisibleAreaChanged() {
-        val detector = textDetector ?: return
-
-        textDetectorDebounceJob.cancelChildren()
-        scope.launch(textDetectorDebounceJob) {
-            // Debounce requests, since this might be called quite frequently
-            delay(175)
-
-            detector.scanViewForText(pager)
-        }
+        textDetector?.scanViewForText(pager)
     }
 }
