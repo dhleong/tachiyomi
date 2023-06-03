@@ -25,12 +25,12 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-class TextDetector(
+class TextRecognizer(
     parentScope: CoroutineScope,
     language: TextRecognizerOptionsInterface =
         JapaneseTextRecognizerOptions.Builder().build(),
-    private val preferredTextGranularity: DetectedText.Granularity =
-        DetectedText.Granularity.WORD,
+    private val preferredTextGranularity: RecognizedText.Granularity =
+        RecognizedText.Granularity.WORD,
     private val debounceScansDuration: Duration = 175.0.milliseconds,
 ) {
     private val recognizer by lazy {
@@ -79,7 +79,7 @@ class TextDetector(
      * If you fed a full image in, this method may be useful to convert a motion
      * event to the source image coordinates
      */
-    fun findTextBlockInZoomedView(view: SubsamplingScaleImageView, event: MotionEvent): DetectedText? {
+    fun findTextBlockInZoomedView(view: SubsamplingScaleImageView, event: MotionEvent): RecognizedText? {
         val sourceCoord = view.viewToSourceCoord(event.x, event.y)
             ?: return null
 
@@ -91,7 +91,7 @@ class TextDetector(
     fun findTextBlockAtPoint(ev: MotionEvent) =
         findTextBlockAtPoint(ev.x.toInt(), ev.y.toInt())
 
-    private fun findTextBlockAtPoint(x: Int, y: Int): DetectedText? {
+    private fun findTextBlockAtPoint(x: Int, y: Int): RecognizedText? {
         val blocks = lastBlocks.get() ?: return null
 
         val matchingBlock = blocks.find {
@@ -107,43 +107,43 @@ class TextDetector(
 
         // Refine granularity if requested. This is a bit more
         // annoying than it could be if TextBase were not package private
-        if (preferredTextGranularity != DetectedText.Granularity.BLOCK) {
+        if (preferredTextGranularity != RecognizedText.Granularity.BLOCK) {
             matchingBlock.findLineAt(x, y)?.let { lineGranularity ->
                 // NOTE: The Japanese recognizer tends to (incorrectly) return a single
                 // "element" for every line. If there's a single "word" in the line, we should
                 // fall through and return a "line" granularity result
                 if (
-                    preferredTextGranularity == DetectedText.Granularity.WORD &&
+                    preferredTextGranularity == RecognizedText.Granularity.WORD &&
                     lineGranularity.elements.size > 1
                 ) {
                     lineGranularity.findElementAt(x, y)?.let { wordGranularity ->
-                        return DetectedText(
+                        return RecognizedText(
                             text = wordGranularity.text,
                             language = wordGranularity.recognizedLanguage,
                             confidence = wordGranularity.confidence,
-                            granularity = DetectedText.Granularity.WORD,
+                            granularity = RecognizedText.Granularity.WORD,
                         )
                     }
 
                     Log.v("ml", "Fallback to LINE from $preferredTextGranularity")
                 }
 
-                return DetectedText(
+                return RecognizedText(
                     text = lineGranularity.text,
                     language = lineGranularity.recognizedLanguage,
                     confidence = lineGranularity.elements.averageBy { it.confidence },
-                    granularity = DetectedText.Granularity.LINE,
+                    granularity = RecognizedText.Granularity.LINE,
                 )
             }
 
             Log.v("ml", "Fallback to BLOCK from $preferredTextGranularity")
         }
 
-        return DetectedText(
+        return RecognizedText(
             text = matchingBlock.text,
             language = matchingBlock.recognizedLanguage,
             confidence = matchingBlock.lines.averageBy { it.confidence },
-            granularity = DetectedText.Granularity.BLOCK,
+            granularity = RecognizedText.Granularity.BLOCK,
         )
     }
 }

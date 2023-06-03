@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.util.ml
 
-data class DetectedText(
+data class RecognizedText(
     val text: String,
     val language: String,
     val confidence: Float,
