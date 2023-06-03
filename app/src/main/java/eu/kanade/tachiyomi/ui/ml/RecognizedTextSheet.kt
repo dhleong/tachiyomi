@@ -31,10 +31,6 @@ class RecognizedTextSheet(
             val translatorIntent = resolveTranslateIntent()
             if (translatorIntent != null) {
                 withUIContext {
-                    val size = binding.translate.height -
-                        binding.translate.paddingTop -
-                        binding.translate.paddingBottom
-
                     binding.translate.visibility = View.VISIBLE
                     binding.translate.setOnClickListener { translateText(translatorIntent) }
                 }
@@ -56,11 +52,6 @@ class RecognizedTextSheet(
     private fun translateText(intent: Intent) {
         activity.startActivity(intent)
     }
-
-    private data class TranslateTarget(
-        val intent: Intent,
-        val icon: Drawable?,
-    )
 
     @Suppress("DEPRECATION")
     private fun resolveTranslateIntent(): Intent? {
