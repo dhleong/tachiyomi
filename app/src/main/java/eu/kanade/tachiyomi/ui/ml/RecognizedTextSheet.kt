@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.ml
 
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import eu.kanade.tachiyomi.databinding.RecognizedTextSheetBinding
