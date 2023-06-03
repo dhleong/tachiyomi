@@ -95,7 +95,10 @@ voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", vers
 ktlint = "org.jlleitschuh.gradle:ktlint-gradle:12.0.3"
 
 mlkit-text = { module = "com.google.android.gms:play-services-mlkit-text-recognition", version.ref = "mlkit-text_version" }
+mlkit-text-chinese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-chinese", version.ref = "mlkit-text-models" }
+mlkit-text-devanagari = { module = "com.google.android.gms:play-services-mlkit-text-recognition-devanagari", version.ref = "mlkit-text-models" }
 mlkit-text-japanese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-japanese", version.ref = "mlkit-text-models" }
+mlkit-text-korean = { module = "com.google.android.gms:play-services-mlkit-text-recognition-korean", version.ref = "mlkit-text-models" }
 
 [bundles]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-brotli", "okhttp-dnsoverhttps"]
@@ -106,5 +109,5 @@ shizuku = ["shizuku-api", "shizuku-provider"]
 sqldelight = ["sqldelight-android-driver", "sqldelight-coroutines", "sqldelight-android-paging"]
 voyager = ["voyager-navigator", "voyager-screenmodel", "voyager-tab-navigator", "voyager-transitions"]
 richtext = ["richtext-commonmark", "richtext-m3"]
-mlkit-text = ["mlkit-text", "mlkit-text-japanese"]
+mlkit-text = ["mlkit-text", "mlkit-text-chinese", "mlkit-text-devanagari", "mlkit-text-japanese", "mlkit-text-korean"]
 test = ["junit", "kotest-assertions", "mockk"]

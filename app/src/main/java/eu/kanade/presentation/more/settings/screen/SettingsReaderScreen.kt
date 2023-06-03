@@ -73,6 +73,7 @@ object SettingsReaderScreen : SearchableSettings {
             ),
             getDisplayGroup(readerPreferences = readerPref),
             getReadingGroup(readerPreferences = readerPref),
+            getTranslationGroup(readerPreferences = readerPref),
             getPagedGroup(readerPreferences = readerPref),
             getWebtoonGroup(readerPreferences = readerPref),
             getNavigationGroup(readerPreferences = readerPref),
@@ -147,6 +148,28 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     pref = readerPreferences.alwaysShowChapterTransition(),
                     title = stringResource(MR.strings.pref_always_show_chapter_transition),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getTranslationGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(R.string.pref_category_translation),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.ListPreference(
+                    pref = readerPreferences.recognizeTextLanguage(),
+                    title = stringResource(R.string.pref_recognize_text_language),
+                    subtitle = stringResource(R.string.pref_recognize_text_language_description),
+                    entries = mapOf(
+                        ReaderPreferences.RecognizeTextLanguage.DISABLE to stringResource(R.string.pref_recognize_text_language_disable),
+                        ReaderPreferences.RecognizeTextLanguage.LATIN to stringResource(R.string.pref_recognize_text_language_lat),
+                        ReaderPreferences.RecognizeTextLanguage.DEVANAGARI to stringResource(R.string.pref_recognize_text_language_dev),
+                        ReaderPreferences.RecognizeTextLanguage.CHINESE to stringResource(R.string.pref_recognize_text_language_ch),
+                        ReaderPreferences.RecognizeTextLanguage.JAPANESE to stringResource(R.string.pref_recognize_text_language_jp),
+                        ReaderPreferences.RecognizeTextLanguage.KOREAN to stringResource(R.string.pref_recognize_text_language_ko),
+                    ),
                 ),
             ),
         )

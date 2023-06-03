@@ -72,6 +72,8 @@ class ReaderPreferences(
 
     fun skipDupe() = preferenceStore.getBoolean("skip_dupe", false)
 
+    fun recognizeTextLanguage() = preferenceStore.getEnum("recognize_text", RecognizeTextLanguage.DISABLE)
+
     // endregion
 
     // region Split two page spread
@@ -152,6 +154,7 @@ class ReaderPreferences(
         LOWEST(47),
     }
 
+<<<<<<< HEAD
     companion object {
         const val WEBTOON_PADDING_MIN = 0
         const val WEBTOON_PADDING_MAX = 25
@@ -199,5 +202,14 @@ class ReaderPreferences(
                 )
             }
         }
+    }
+
+    enum class RecognizeTextLanguage {
+        DISABLE,
+        LATIN,
+        DEVANAGARI,
+        CHINESE,
+        JAPANESE,
+        KOREAN,
     }
 }
