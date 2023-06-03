@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.app.Application
+import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -24,6 +25,7 @@ import eu.kanade.tachiyomi.data.saver.Location
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.ui.ml.RecognizedTextSheet
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -38,6 +40,7 @@ import eu.kanade.tachiyomi.util.chapter.removeDuplicates
 import eu.kanade.tachiyomi.util.editCover
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.lang.takeBytes
+import eu.kanade.tachiyomi.util.ml.RecognizedText
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.system.isOnline
@@ -444,6 +447,28 @@ class ReaderViewModel(
         val inDownloadRange = page.number.toDouble() / pages.size > 0.25
         if (inDownloadRange) {
             downloadNextChapters()
+        }
+    }
+
+    fun onTapRecognizedText(text: RecognizedText) {
+        viewModelScope.launchIO {
+            when (readerPreferences.recognizeTextTapAction().get()) {
+                ReaderPreferences.RecognizeTextTapAction.ASK ->
+                    eventChannel.send(Event.ShowRecognizedText(text))
+
+                ReaderPreferences.RecognizeTextTapAction.SHARE ->
+                    eventChannel.send(Event.ShareText(text.text))
+
+                ReaderPreferences.RecognizeTextTapAction.TRANSLATE -> {
+                    val context = Injekt.get<Application>()
+                    val translatorIntent = RecognizedTextSheet.resolveTranslateIntent(context, text)
+                    if (translatorIntent != null) {
+                        eventChannel.send(Event.LaunchIntent(translatorIntent))
+                    } else {
+                        eventChannel.send(Event.ShowRecognizedText(text))
+                    }
+                }
+            }
         }
     }
 
@@ -907,6 +932,10 @@ class ReaderViewModel(
 
         data class SavedImage(val result: SaveImageResult) : Event()
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event()
+
+        data class ShareText(val text: String) : Event()
+        data class ShowRecognizedText(val text: RecognizedText) : Event()
+        data class LaunchIntent(val intent: Intent) : Event()
     }
 
     companion object {

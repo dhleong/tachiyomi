@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.ml
 
+import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
@@ -27,7 +28,7 @@ class RecognizedTextSheet(
         binding.share.setOnClickListener { shareText() }
 
         scope.launchIO {
-            val translatorIntent = resolveTranslateIntent()
+            val translatorIntent = resolveTranslateIntent(activity, recognizedText)
             if (translatorIntent != null) {
                 withUIContext {
                     binding.translate.visibility = View.VISIBLE
@@ -52,40 +53,40 @@ class RecognizedTextSheet(
         activity.startActivity(intent)
     }
 
-    @Suppress("DEPRECATION")
-    private fun resolveTranslateIntent(): Intent? {
-        val packageManager = activity.packageManager
-        for (intent in generateIntents()) {
-            if (packageManager.resolveActivity(intent, 0) != null) {
-                return intent
-            }
-        }
-
-        return null
-    }
-
-    private fun generateIntents() = sequence {
-        yield(
-            Intent(Intent.ACTION_PROCESS_TEXT).apply {
-                `package` = GOOGLE_TRANSLATE_PACKAGE
-                type = "text/plain"
-                putExtra(Intent.EXTRA_PROCESS_TEXT, recognizedText.text)
-            },
-        )
-
-        yield(
-            Intent(Intent.ACTION_SEND).apply {
-                `package` = GOOGLE_TRANSLATE_PACKAGE
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, recognizedText.text)
-                putExtra("key_text_input", recognizedText.text)
-                putExtra("key_language_from", recognizedText.language)
-                putExtra("key_from_floating_window", true)
-            },
-        )
-    }
-
     companion object {
         private const val GOOGLE_TRANSLATE_PACKAGE = "com.google.android.apps.translate"
+
+        @Suppress("DEPRECATION")
+        fun resolveTranslateIntent(context: Context, recognizedText: RecognizedText): Intent? {
+            val packageManager = context.packageManager
+            for (intent in generateIntents(recognizedText)) {
+                if (packageManager.resolveActivity(intent, 0) != null) {
+                    return intent
+                }
+            }
+
+            return null
+        }
+
+        private fun generateIntents(recognizedText: RecognizedText) = sequence {
+            yield(
+                Intent(Intent.ACTION_PROCESS_TEXT).apply {
+                    `package` = GOOGLE_TRANSLATE_PACKAGE
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_PROCESS_TEXT, recognizedText.text)
+                },
+            )
+
+            yield(
+                Intent(Intent.ACTION_SEND).apply {
+                    `package` = GOOGLE_TRANSLATE_PACKAGE
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, recognizedText.text)
+                    putExtra("key_text_input", recognizedText.text)
+                    putExtra("key_language_from", recognizedText.language)
+                    putExtra("key_from_floating_window", true)
+                },
+            )
+        }
     }
 }

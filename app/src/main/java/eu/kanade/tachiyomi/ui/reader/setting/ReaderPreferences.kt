@@ -66,6 +66,8 @@ class ReaderPreferences(
 
     fun recognizeTextLanguage() = preferenceStore.getEnum("recognize_text", RecognizeTextLanguage.DISABLE)
 
+    fun recognizeTextTapAction() = preferenceStore.getEnum("recognize_text_tap_action", RecognizeTextTapAction.ASK)
+
     // endregion
 
     // region Split two page spread
@@ -145,5 +147,11 @@ class ReaderPreferences(
         CHINESE,
         JAPANESE,
         KOREAN,
+    }
+
+    enum class RecognizeTextTapAction {
+        ASK,
+        SHARE,
+        TRANSLATE,
     }
 }
