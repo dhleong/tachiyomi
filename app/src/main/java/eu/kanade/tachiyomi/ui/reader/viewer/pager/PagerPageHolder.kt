@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.PointF
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import eu.kanade.tachiyomi.databinding.ReaderErrorBinding
@@ -250,6 +251,7 @@ class PagerPageHolder(
     override fun onImageLoaded() {
         super.onImageLoaded()
         progressIndicator.hide()
+        viewer.onVisibleAreaChanged()
     }
 
     /**
@@ -266,6 +268,12 @@ class PagerPageHolder(
     override fun onScaleChanged(newScale: Float) {
         super.onScaleChanged(newScale)
         viewer.activity.hideMenu()
+        viewer.onVisibleAreaChanged()
+    }
+
+    override fun onCenterChanged(newCenter: PointF?) {
+        super.onCenterChanged(newCenter)
+        viewer.onVisibleAreaChanged()
     }
 
     private fun showErrorLayout(): ReaderErrorBinding {

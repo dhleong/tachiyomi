@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnAttachStateChangeListener
+import androidx.core.view.drawToBitmap
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
@@ -53,6 +54,12 @@ class TextDetector(
         }
     }
 
+    fun scanViewForText(view: View) {
+        scanForText {
+            InputImage.fromBitmap(view.drawToBitmap(), 0)
+        }
+    }
+
     fun scanForText(inputFactory: () -> InputImage) {
         val job = scopeJob ?: return
         job.cancelChildren()
@@ -70,18 +77,21 @@ class TextDetector(
     }
 
     fun findTextBlockInView(event: MotionEvent): TextBlock? {
-        val blocks = lastBlocks.get() ?: return null
-
         val sourceCoord =
             (pageView as? SubsamplingScaleImageView)
                 ?.viewToSourceCoord(event.x, event.y)
                 ?: return null
 
+        val x = sourceCoord.x.toInt()
+        val y = sourceCoord.y.toInt()
+        return findTextBlockAtPoint(x, y)
+    }
+
+    fun findTextBlockAtPoint(x: Int, y: Int): TextBlock? {
+        val blocks = lastBlocks.get() ?: return null
+
         val matchingBlock = blocks.find {
-            it.boundingBox?.contains(
-                sourceCoord.x.toInt(),
-                sourceCoord.y.toInt(),
-            ) == true
+            it.boundingBox?.contains(x, y) == true
         }
 
         Log.v("ml", "found: ${matchingBlock?.text}")
