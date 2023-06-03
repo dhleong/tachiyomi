@@ -12,14 +12,18 @@ import com.google.mlkit.vision.text.TextRecognizerOptionsInterface
 import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.lang.await
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newCoroutineContext
 import okhttp3.internal.closeQuietly
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 class TextDetector(
     parentScope: CoroutineScope,
@@ -27,6 +31,7 @@ class TextDetector(
         JapaneseTextRecognizerOptions.Builder().build(),
     private val preferredTextGranularity: DetectedText.Granularity =
         DetectedText.Granularity.WORD,
+    private val debounceScansDuration: Duration = 175.0.milliseconds,
 ) {
     private val recognizer by lazy {
         TextRecognition.getClient(language)
@@ -54,11 +59,16 @@ class TextDetector(
         // There should only be one active scan at a time
         lastScanJob?.cancel()
         lastScanJob = scope.launch {
+            delay(debounceScansDuration)
+
             try {
                 Log.v("ml", "Scanning for text")
                 val text = recognizer.process(inputFactory()).await()
                 lastBlocks.set(text.textBlocks)
                 Log.v("ml", "processed: ${text.text}")
+            } catch (e: CancellationException) {
+                // "Ignore" and re-raise cancellations
+                throw e
             } catch (e: Throwable) {
                 Log.v("ml", "failed: $e")
             }
@@ -104,7 +114,7 @@ class TextDetector(
                 // fall through and return a "line" granularity result
                 if (
                     preferredTextGranularity == DetectedText.Granularity.WORD &&
-                        lineGranularity.elements.size > 1
+                    lineGranularity.elements.size > 1
                 ) {
                     lineGranularity.findElementAt(x, y)?.let { wordGranularity ->
                         return DetectedText(
