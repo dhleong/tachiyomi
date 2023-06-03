@@ -217,8 +217,17 @@ class ReaderActivity : BaseActivity() {
                     is ReaderViewModel.Event.ShareImage -> {
                         onShareImageResult(event.uri, event.page)
                     }
+                    is ReaderViewModel.Event.ShareText -> {
+                        shareText(event.text)
+                    }
                     is ReaderViewModel.Event.SetCoverResult -> {
                         onSetAsCoverResult(event.result)
+                    }
+                    is ReaderViewModel.Event.ShowRecognizedText -> {
+                        RecognizedTextSheet(this, event.text).show()
+                    }
+                    is ReaderViewModel.Event.LaunchIntent -> {
+                        startActivity(event.intent)
                     }
                 }
             }
@@ -654,10 +663,10 @@ class ReaderActivity : BaseActivity() {
     }
 
     fun onRecognizedTextTap(item: RecognizedText) {
-        RecognizedTextSheet(this, item).show()
+        viewModel.onTapRecognizedText(item)
     }
 
-    /** Called from the RecognizedTextSheet */
+    /** Called from the RecognizedTextSheet or dispatched by the ViewModel */
     fun shareText(text: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             putExtra(Intent.EXTRA_TEXT, text)

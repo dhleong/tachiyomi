@@ -51,6 +51,9 @@ class PagerConfig(
     var recognizeTextLanguage = ReaderPreferences.RecognizeTextLanguage.DISABLE
         private set
 
+    var recognizeTextTapAction = ReaderPreferences.RecognizeTextTapAction.ASK
+        private set
+
     init {
         readerPreferences.readerTheme()
             .register(
@@ -112,6 +115,9 @@ class PagerConfig(
 
         readerPreferences.recognizeTextLanguage()
             .register({ recognizeTextLanguage = it })
+
+        readerPreferences.recognizeTextTapAction()
+            .register({ recognizeTextTapAction = it })
     }
 
     private fun zoomTypeFromPreference(value: Int) {

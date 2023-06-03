@@ -171,6 +171,16 @@ object SettingsReaderScreen : SearchableSettings {
                         ReaderPreferences.RecognizeTextLanguage.KOREAN to stringResource(R.string.pref_recognize_text_language_ko),
                     ),
                 ),
+
+                Preference.PreferenceItem.ListPreference(
+                    pref = readerPreferences.recognizeTextTapAction(),
+                    title = stringResource(R.string.pref_recognize_text_tap_action),
+                    entries = mapOf(
+                        ReaderPreferences.RecognizeTextTapAction.ASK to stringResource(R.string.pref_recognize_text_tap_action_ask),
+                        ReaderPreferences.RecognizeTextTapAction.SHARE to stringResource(R.string.pref_recognize_text_tap_action_share),
+                        ReaderPreferences.RecognizeTextTapAction.TRANSLATE to stringResource(R.string.pref_recognize_text_tap_action_translate),
+                    ),
+                ),
             ),
         )
     }

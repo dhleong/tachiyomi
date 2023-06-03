@@ -457,6 +457,10 @@
     <string name="pref_recognize_text_language_ch">Chinese</string>
     <string name="pref_recognize_text_language_jp">Japanese</string>
     <string name="pref_recognize_text_language_ko">Korean</string>
+    <string name="pref_recognize_text_tap_action">Text tap action</string>
+    <string name="pref_recognize_text_tap_action_ask">Ask each time</string>
+    <string name="pref_recognize_text_tap_action_share">Share</string>
+    <string name="pref_recognize_text_tap_action_translate">Open in Translate App</string>
     <string name="pref_webtoon_side_padding">Side padding</string>
     <string name="pref_hide_threshold">Sensitivity for hiding menu on scroll</string>
     <string name="pref_highest">Highest</string>
