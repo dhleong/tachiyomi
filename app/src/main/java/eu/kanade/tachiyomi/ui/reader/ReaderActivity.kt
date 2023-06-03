@@ -40,7 +40,6 @@ import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.elevation.SurfaceColors
 import com.google.android.material.transition.platform.MaterialContainerTransform
-import com.google.mlkit.vision.text.Text.TextBlock
 import dev.chrisbanes.insetter.applyInsetter
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.reader.DisplayRefreshHost
@@ -70,6 +69,13 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
+<<<<<<< HEAD
+=======
+import eu.kanade.tachiyomi.util.ml.DetectedText
+import eu.kanade.tachiyomi.util.preference.toggle
+import eu.kanade.tachiyomi.util.system.applySystemAnimatorScale
+import eu.kanade.tachiyomi.util.system.createReaderThemeContext
+>>>>>>> 7e479e4d0 (Pull TextDetector further out of the view layer; abstract out TextBlock)
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
 import eu.kanade.tachiyomi.util.system.isNightMode
 import eu.kanade.tachiyomi.util.system.toShareIntent
@@ -649,8 +655,8 @@ class ReaderActivity : BaseActivity() {
         viewModel.openPageDialog(page)
     }
 
-    fun onDetectedTextTap(textBlock: TextBlock) {
-        shareText(textBlock.text)
+    fun onDetectedTextTap(item: DetectedText) {
+        shareText(item.text)
     }
 
     private fun shareText(text: String) {

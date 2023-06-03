@@ -7,7 +7,6 @@ import android.graphics.drawable.Animatable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -30,7 +29,6 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_OUT_QU
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
 import com.github.chrisbanes.photoview.PhotoView
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
-import eu.kanade.tachiyomi.util.ml.TextDetector
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.view.isVisibleOnScreen
@@ -66,29 +64,6 @@ open class ReaderPageImageView @JvmOverloads constructor(
      * For automatic background. Will be set as background color when [onImageLoaded] is called.
      */
     var pageBackground: Drawable? = null
-
-    val textDetector: TextDetector? by lazy {
-        pageView?.let { TextDetector(it) }
-    }
-
-    private fun onImageDrawableLoaded(drawable: BitmapDrawable) {
-        Log.v("ml", "onImageDrawableLoaded($drawable)")
-
-//        textDetector?.scanForText {
-//            InputImage.fromBitmap(drawable.bitmap, 0)
-//        }
-    }
-
-    private fun onTiledImageLoaded(stream: InputStream) {
-//        textDetector?.scanForText {
-//            Log.v("ml", "scan stream...")
-//            stream.reset()
-//            InputImage.fromBitmap(
-//                BitmapFactory.decodeStream(stream),
-//                0,
-//            )
-//        }
-    }
 
     @CallSuper
     open fun onImageLoaded() {
@@ -176,7 +151,6 @@ open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     fun setImage(inputStream: InputStream, isAnimated: Boolean, config: Config) {
-        Log.v("ml", "setImage: $inputStream")
         this.config = config
         if (isAnimated) {
             prepareAnimatedImageView()
@@ -304,9 +278,6 @@ open class ReaderPageImageView @JvmOverloads constructor(
                 override fun onReady() {
                     setupZoom(config)
                     if (isVisibleOnScreen()) landscapeZoom(true)
-                    if (image is InputStream) {
-                        onTiledImageLoaded(image)
-                    }
                     this@ReaderPageImageView.onImageLoaded()
                 }
 
@@ -317,15 +288,9 @@ open class ReaderPageImageView @JvmOverloads constructor(
         )
 
         when (image) {
-            is BitmapDrawable -> {
-                val bitmap = image.bitmap
-                onImageDrawableLoaded(image)
-                setImage(ImageSource.bitmap(image.bitmap))
-            }
-            is InputStream -> {
-                Log.v("ml", "load from input stream: $image")
-                setImage(ImageSource.inputStream(image))
-            }
+            is BitmapDrawable -> setImage(ImageSource.bitmap(image.bitmap))
+            is InputStream -> setImage(ImageSource.inputStream(image))
+
             else -> throw IllegalArgumentException("Not implemented for class ${image::class.simpleName}")
         }
         isVisible = true

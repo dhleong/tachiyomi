@@ -19,10 +19,12 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
+import eu.kanade.tachiyomi.util.ml.TextDetector
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.core.util.system.logcat
@@ -38,6 +40,12 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     val downloadManager: DownloadManager by injectLazy()
 
     private val scope = MainScope()
+
+    private var textDetectorDebounceJob: Job = SupervisorJob()
+    private val textDetector: TextDetector? by lazy {
+        // TODO inject this, probably, and support disabling it
+        TextDetector(scope)
+    }
 
     /**
      * View pager used by this viewer. It's abstract to implement L2R, R2L and vertical pagers on
@@ -105,7 +113,12 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
                 }
             },
         )
-        pager.tapListener = { event ->
+        pager.tapListener = f@{ event ->
+            textDetector?.findTextBlockAtPoint(event)?.let { text ->
+                activity.onDetectedTextTap(text)
+                return@f
+            }
+
             val viewPosition = IntArray(2)
             pager.getLocationOnScreen(viewPosition)
             val viewPositionRelativeToWindow = IntArray(2)
@@ -131,9 +144,6 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
                 }
             }
             false
-        }
-        pager.detectedTextTapListener = { item ->
-            activity.onDetectedTextTap(item)
         }
 
         config.dualPageSplitChangedListener = { enabled ->
@@ -453,16 +463,15 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         adapter.cleanupPageSplit()
     }
 
-    private var textDetectorJob: Job? = null
-
     fun onVisibleAreaChanged() {
-        textDetectorJob?.cancel()
-        val newJob = SupervisorJob()
-        textDetectorJob = newJob
-        scope.launch(newJob) {
+        val detector = textDetector ?: return
+
+        textDetectorDebounceJob.cancelChildren()
+        scope.launch(textDetectorDebounceJob) {
+            // Debounce requests, since this might be called quite frequently
             delay(175)
 
-            pager.textDetector.scanViewForText(pager)
+            detector.scanViewForText(pager)
         }
     }
 }
